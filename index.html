@@ -67,8 +67,14 @@
     </div>
 
     <script>
-        let map = L.map('map').setView([0, 0], 2); // Initialize map, default view
-        let userMovedMap = false; // Track if user has moved the map
+        let map = L.map('map', {
+            zoomControl: true, // Enable zoom controls
+            dragging: true, // Allow dragging
+            scrollWheelZoom: true, // Enable scroll zoom
+            doubleClickZoom: true, // Enable double-click zoom
+        }).setView([0, 0], 2); // Default view before first update
+
+        let firstLoad = true; // Track if it's the first map load
 
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -76,11 +82,6 @@
         }).addTo(map);
 
         let marker = L.marker([0, 0]).addTo(map); // Default marker
-
-        // Detect if the user moves the map manually
-        map.on('dragstart', function() {
-            userMovedMap = true;
-        });
 
         async function fetchGPSData() {
             const channelID = "2826350";  // Your ThingSpeak Channel ID
@@ -106,12 +107,13 @@
                     let googleMapsURL = `https://www.google.com/maps?q=${latitude},${longitude}`;
                     document.getElementById("mapsLink").href = googleMapsURL;
 
-                    // Update Marker Position without moving the map if user has moved it
+                    // Update Marker Position
                     marker.setLatLng([latitude, longitude]).bindPopup("Current Location").openPopup();
 
-                    // Only recenter if user hasn't manually moved the map
-                    if (!userMovedMap) {
+                    // Center map only on the first load
+                    if (firstLoad) {
                         map.setView([latitude, longitude], 15);
+                        firstLoad = false; // Prevent future auto-centering
                     }
                 } else {
                     console.error("No data found in ThingSpeak.");
